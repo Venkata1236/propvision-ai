@@ -34,7 +34,7 @@ def train_models() -> None:
     logger.info("Loading training dataset")
 
     dataset_path = (
-        Path("backend/data/train.csv")
+        Path("data/train.csv")
     )
 
     df = pd.read_csv(dataset_path)
