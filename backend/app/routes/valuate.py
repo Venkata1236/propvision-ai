@@ -81,6 +81,7 @@ async def valuate_property(
         # CONVERT TO DATAFRAME
         # =========================
 
+
         input_df = pd.DataFrame(
             [
                 {
