@@ -1,5 +1,4 @@
-from crewai import Agent
-from langchain_openai import ChatOpenAI
+from crewai import Agent, LLM
 from loguru import logger
 
 from app.core.config import settings
@@ -9,8 +8,8 @@ logger.info(
     "Initializing CrewAI language model"
 )
 
-llm = ChatOpenAI(
-    model=settings.openai_model,
+llm = LLM(
+    model=f"openai/{settings.openai_model}",
     temperature=0.2,
     api_key=settings.openai_api_key,
 )
