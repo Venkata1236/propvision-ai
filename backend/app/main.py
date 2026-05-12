@@ -6,6 +6,7 @@ from loguru import logger
 
 from app.core.config import settings
 from app.core.logger import setup_logger
+from app.routes.valuate import router as valuate_router
 
 
 @asynccontextmanager
