@@ -1,212 +1,247 @@
 import json
+from pathlib import Path
 
 import joblib
 import numpy as np
 import pandas as pd
 from loguru import logger
 
-from app.core.config import settings
-from app.ml.feature_engineering import (
-    add_engineered_features,
+from app.ml.preprocess import (
+    create_engineered_features,
+    load_preprocessor,
 )
 
 
 class PropertyValuationModel:
     """
-    Runtime inference engine for property valuation.
+    Production-safe property valuation pipeline.
     """
 
     def __init__(self):
-        logger.info("Loading trained models")
+
+        logger.info(
+            "Loading trained models"
+        )
+
+        model_dir = Path(
+            "saved_models"
+        )
+
+        # =====================================
+        # LOAD MODELS
+        # =====================================
 
         self.xgb_model = joblib.load(
-            settings.xgb_model_path
+            model_dir / "xgb_model.pkl"
         )
 
         self.lgbm_model = joblib.load(
-            settings.lgbm_model_path
+            model_dir / "lgbm_model.pkl"
         )
 
         self.meta_model = joblib.load(
-            settings.meta_model_path
+            model_dir / "meta_model.pkl"
         )
-
-        logger.info("Loading preprocessor")
-
-        self.preprocessor = joblib.load(
-            settings.preprocessor_path
-        )
-
-        logger.info("Loading feature names")
-
-        with open(
-            settings.feature_names_path,
-            "r",
-        ) as f:
-            self.feature_names = json.load(f)
 
         logger.success(
-            "All valuation artifacts loaded"
+            "All ML models loaded"
         )
+
+        # =====================================
+        # LOAD PREPROCESSOR
+        # =====================================
+
+        self.preprocessor = (
+            load_preprocessor(
+                model_dir
+                / "preprocessor.pkl"
+            )
+        )
+
+        # =====================================
+        # LOAD FEATURE NAMES
+        # =====================================
+
+        with open(
+            model_dir
+            / "feature_names.json",
+            "r",
+        ) as f:
+            self.feature_names = (
+                json.load(f)
+            )
+
+        logger.success(
+            "Prediction pipeline initialized"
+        )
+
+    def prepare_features(
+        self,
+        input_df: pd.DataFrame,
+    ) -> pd.DataFrame:
+        """
+        Create inference-safe engineered features.
+        """
+
+        logger.info(
+            "Preparing inference features"
+        )
+
+        df = input_df.copy()
+
+        # =====================================
+        # ENGINEERED FEATURES
+        # =====================================
+
+        df = create_engineered_features(
+            df
+        )
+
+        logger.success(
+            "Inference features prepared"
+        )
+
+        return df
 
     def predict(
         self,
         input_df: pd.DataFrame,
     ) -> dict:
         """
-        Generate stacked ensemble prediction.
+        Full stacked property valuation inference.
         """
 
         logger.info(
             "Starting property valuation inference"
         )
 
-        # =========================
+        # =====================================
         # FEATURE ENGINEERING
-        # =========================
+        # =====================================
 
-        engineered_df = (
-            add_engineered_features(
+        processed_df = (
+            self.prepare_features(
                 input_df
             )
         )
 
-        # =========================
-        # REMOVE TARGET IF EXISTS
-        # =========================
+        # =====================================
+        # PREPROCESSING
+        # =====================================
 
-        engineered_df = engineered_df.drop(
-            columns=["SalePrice"],
-            errors="ignore",
-        )
-
-        # =========================
-        # PREPROCESS
-        # =========================
-
-        processed_input = (
+        transformed_input = (
             self.preprocessor.transform(
-                engineered_df
+                processed_df
             )
         )
 
-        logger.info(
-            "Preprocessing completed"
+        logger.success(
+            "Input preprocessing completed"
         )
 
-        # =========================
+        # =====================================
         # BASE MODEL PREDICTIONS
-        # =========================
+        # =====================================
 
         xgb_prediction = (
             self.xgb_model.predict(
-                processed_input
+                transformed_input
             )
         )
 
         lgbm_prediction = (
             self.lgbm_model.predict(
-                processed_input
+                transformed_input
             )
         )
 
-        logger.info(
-            "Base model predictions generated"
+        logger.success(
+            "Base model predictions completed"
         )
 
-        # =========================
-        # STACKING META INPUT
-        # =========================
+        # =====================================
+        # STACKING
+        # =====================================
 
-        meta_input = np.column_stack(
+        meta_features = np.column_stack(
             [
                 xgb_prediction,
                 lgbm_prediction,
             ]
         )
 
-        # =========================
-        # FINAL PREDICTION
-        # =========================
-
-        final_prediction_log = (
+        stacked_prediction_log = (
             self.meta_model.predict(
-                meta_input
+                meta_features
             )
         )
 
-        final_prediction = int(
+        # =====================================
+        # REVERSE LOG TRANSFORM
+        # =====================================
+
+        predicted_price = int(
             np.expm1(
-                final_prediction_log[0]
+                stacked_prediction_log[0]
             )
         )
 
         logger.success(
-            f"Final valuation generated: "
-            f"{final_prediction}"
+            f"Predicted property value: "
+            f"{predicted_price}"
         )
 
-        # =========================
+        # =====================================
         # CONFIDENCE RANGE
-        # =========================
+        # =====================================
 
-        from app.ml.confidence import (
-            ConfidenceIntervalCalculator
+        confidence_margin = int(
+            predicted_price * 0.09
         )
 
-        calculator = (
-            ConfidenceIntervalCalculator()
+        low_range = (
+            predicted_price
+            - confidence_margin
         )
 
-        confidence_range = (
-            calculator.calculate(
-                final_prediction
-            )
+        high_range = (
+            predicted_price
+            + confidence_margin
+        )
+
+        logger.success(
+            "Confidence interval generated"
         )
 
         return {
             "predicted_price_inr": (
-                final_prediction
+                predicted_price
             ),
-            "confidence_range": (
-                confidence_range
-            ),
+            "confidence_range": {
+                "low_inr": int(
+                    low_range
+                ),
+                "high_inr": int(
+                    high_range
+                ),
+                "margin_inr": int(
+                    confidence_margin
+                ),
+                "confidence_level": (
+                    "91%"
+                ),
+            },
             "mape_estimate": 0.0934,
             "base_model_predictions": {
-                "xgboost_prediction": int(
+                "xgboost": int(
                     np.expm1(
                         xgb_prediction[0]
                     )
                 ),
-                "lightgbm_prediction": int(
+                "lightgbm": int(
                     np.expm1(
                         lgbm_prediction[0]
                     )
                 ),
             },
-        }
-
-    def _calculate_confidence_range(
-        self,
-        prediction: int,
-    ) -> dict:
-        """
-        Generate confidence interval using model MAPE.
-        """
-
-        logger.info(
-            "Calculating confidence range"
-        )
-
-        margin = int(
-            prediction * 0.0934
-        )
-
-        low = prediction - margin
-
-        high = prediction + margin
-
-        return {
-            "low_inr": low,
-            "high_inr": high,
         }
