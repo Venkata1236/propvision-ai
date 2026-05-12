@@ -150,8 +150,16 @@ class PropertyValuationModel:
         # CONFIDENCE RANGE
         # =========================
 
+        from app.ml.confidence import (
+            ConfidenceIntervalCalculator
+        )
+
+        calculator = (
+            ConfidenceIntervalCalculator()
+        )
+
         confidence_range = (
-            self._calculate_confidence_range(
+            calculator.calculate(
                 final_prediction
             )
         )
