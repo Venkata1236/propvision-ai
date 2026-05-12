@@ -77,14 +77,28 @@ async def valuate_property(
 
     try:
 
-        # =========================
-        # CONVERT TO DATAFRAME
-        # =========================
+        # =====================================
+        # CREATE TRAINING-COMPATIBLE INPUT
+        # =====================================
 
+        estimated_year_built = (
+            2010
+            - property_input.house_age_years
+        )
+
+        estimated_remodel_year = (
+            2010
+            if property_input.is_remodeled
+            else estimated_year_built
+        )
 
         input_df = pd.DataFrame(
             [
                 {
+                    # =====================
+                    # ORIGINAL KAGGLE FIELDS
+                    # =====================
+
                     "Neighborhood": (
                         property_input.neighborhood
                     ),
@@ -100,18 +114,72 @@ async def valuate_property(
                     "OverallQual": (
                         property_input.overall_quality
                     ),
+                    "GarageArea": (
+                        500
+                        if property_input.has_garage
+                        else 0
+                    ),
+                    "PoolArea": (
+                        1
+                        if property_input.has_pool
+                        else 0
+                    ),
+                    "YrSold": 2010,
+                    "YearBuilt": (
+                        estimated_year_built
+                    ),
+                    "YearRemodAdd": (
+                        estimated_remodel_year
+                    ),
+                    "OverallCond": 5,
+                    "TotalBsmtSF": (
+                        int(
+                            property_input.total_sqft
+                            * 0.4
+                        )
+                    ),
+                    "1stFlrSF": (
+                        int(
+                            property_input.total_sqft
+                            * 0.6
+                        )
+                    ),
+                    "2ndFlrSF": (
+                        int(
+                            property_input.total_sqft
+                            * 0.4
+                        )
+                    ),
+
+                    # =====================
+                    # ENGINEERED FEATURES
+                    # =====================
+
                     "house_age": (
                         property_input.house_age_years
+                    ),
+                    "remod_age": (
+                        0
+                        if property_input.is_remodeled
+                        else property_input.house_age_years
                     ),
                     "is_remodeled": int(
                         property_input.is_remodeled
                     ),
-                    "has_garage": int(
-                        property_input.has_garage
+                    "total_sf": (
+                        property_input.total_sqft
+                    ),
+                    "overall_quality_score": (
+                        property_input.overall_quality
+                        * 5
                     ),
                     "has_pool": int(
                         property_input.has_pool
                     ),
+                    "has_garage": int(
+                        property_input.has_garage
+                    ),
+                    "has_basement": 1,
                     "floor_number": (
                         property_input.floor_number
                     ),
@@ -120,12 +188,12 @@ async def valuate_property(
         )
 
         logger.success(
-            "Input dataframe prepared"
+            "Training-compatible input dataframe prepared"
         )
 
-        # =========================
+        # =====================================
         # PROPERTY VALUATION
-        # =========================
+        # =====================================
 
         prediction_result = (
             valuation_model.predict(
@@ -140,13 +208,13 @@ async def valuate_property(
         )
 
         logger.success(
-            f"Predicted price: "
+            f"Predicted property value: "
             f"{predicted_price}"
         )
 
-        # =========================
+        # =====================================
         # SHAP EXPLANATION
-        # =========================
+        # =====================================
 
         shap_result = (
             shap_explainer.explain_prediction(
@@ -158,9 +226,9 @@ async def valuate_property(
             "SHAP explanation generated"
         )
 
-        # =========================
+        # =====================================
         # COMPARABLE SALES
-        # =========================
+        # =====================================
 
         comparable_sales = (
             comparable_retriever
@@ -181,6 +249,11 @@ async def valuate_property(
                     "OverallQual": (
                         property_input.overall_quality
                     ),
+                    "GarageArea": (
+                        500
+                        if property_input.has_garage
+                        else 0
+                    ),
                 }
             )
         )
@@ -189,9 +262,9 @@ async def valuate_property(
             "Comparable sales retrieved"
         )
 
-        # =========================
+        # =====================================
         # CREWAI MARKET ANALYSIS
-        # =========================
+        # =====================================
 
         crew_result = (
             market_crew.run_analysis(
@@ -208,12 +281,12 @@ async def valuate_property(
         )
 
         logger.success(
-            "CrewAI analysis completed"
+            "CrewAI market analysis completed"
         )
 
-        # =========================
-        # MOCK STRUCTURED OUTPUTS
-        # =========================
+        # =====================================
+        # MOCK MARKET ANALYSIS
+        # =====================================
 
         market_analysis = (
             MarketAnalysis(
@@ -221,13 +294,18 @@ async def valuate_property(
                 yoy_change_pct=12.3,
                 forecast=(
                     "Strong buyer demand and "
-                    "limited inventory suggest "
-                    "continued appreciation over "
-                    "next 6-12 months."
+                    "limited premium inventory "
+                    "suggest continued property "
+                    "appreciation over the next "
+                    "6-12 months."
                 ),
                 demand_level="HIGH",
             )
         )
+
+        # =====================================
+        # INVESTMENT RECOMMENDATION
+        # =====================================
 
         investment_recommendation = (
             InvestmentRecommendation(
@@ -243,9 +321,9 @@ async def valuate_property(
             )
         )
 
-        # =========================
+        # =====================================
         # PROCESSING TIME
-        # =========================
+        # =====================================
 
         processing_time = round(
             time.time() - start_time,
@@ -253,13 +331,14 @@ async def valuate_property(
         )
 
         logger.success(
-            f"Valuation completed in "
+            f"Full valuation pipeline "
+            f"completed in "
             f"{processing_time}s"
         )
 
-        # =========================
+        # =====================================
         # FINAL RESPONSE
-        # =========================
+        # =====================================
 
         return ValuationResponse(
             valuation_id=str(
