@@ -168,9 +168,8 @@ class ComparableSalesRetriever:
                             "Unknown",
                         )
                     ),
-                    "similarity_score": round(
-                        similarity_score,
-                        2,
+                    "similarity_score": float(
+                        round(similarity_score, 2)
                     ),
                     "neighborhood": (
                         property_record.get(
