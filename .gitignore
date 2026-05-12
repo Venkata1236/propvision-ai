@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Models
+backend/saved_models/*.pkl
+backend/saved_models/*.joblib
+
+# FAISS
+backend/faiss_index/*.faiss
+backend/faiss_index/*.npy
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Testing
+.pytest_cache/
+
+# Environment files
+backend/.env
+frontend/.env
