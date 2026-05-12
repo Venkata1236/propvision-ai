@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import joblib
 import pandas as pd
 from loguru import logger
@@ -7,49 +5,99 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import StandardScaler
 
 
-def build_preprocessor(
+# =========================================
+# PRODUCTION FEATURE CONTRACT
+# =========================================
+
+NUMERICAL_FEATURES = [
+    "GrLivArea",
+    "BedroomAbvGr",
+    "FullBath",
+    "OverallQual",
+    "house_age",
+    "is_remodeled",
+    "has_garage",
+    "has_pool",
+    "floor_number",
+    "total_sf",
+    "overall_quality_score",
+]
+
+CATEGORICAL_FEATURES = [
+    "Neighborhood",
+]
+
+
+def create_engineered_features(
     df: pd.DataFrame,
-) -> Tuple[ColumnTransformer, list]:
+) -> pd.DataFrame:
     """
-    Build preprocessing pipeline for numerical and categorical features.
+    Create production-safe engineered features.
     """
-
-    logger.info("Building preprocessing pipeline")
-
-    numeric_features = df.select_dtypes(
-        include=["int64", "float64"]
-    ).columns.tolist()
-
-    categorical_features = df.select_dtypes(
-        include=["object"]
-    ).columns.tolist()
 
     logger.info(
-        f"Detected {len(numeric_features)} numeric features"
+        "Creating engineered features"
     )
+
+    df = df.copy()
+
+    # =============================
+    # TOTAL AREA FEATURE
+    # =============================
+
+    df["total_sf"] = (
+        df["GrLivArea"]
+    )
+
+    # =============================
+    # QUALITY SCORE
+    # =============================
+
+    df["overall_quality_score"] = (
+        df["OverallQual"] * 5
+    )
+
+    logger.success(
+        "Engineered features created"
+    )
+
+    return df
+
+
+def create_preprocessor():
+    """
+    Create ML preprocessing pipeline.
+    """
 
     logger.info(
-        f"Detected {len(categorical_features)} categorical features"
+        "Creating preprocessing pipeline"
     )
 
-    # =========================
+    # =============================
     # NUMERICAL PIPELINE
-    # =========================
+    # =============================
 
-    numeric_pipeline = Pipeline(
+    numerical_pipeline = Pipeline(
         steps=[
             (
                 "imputer",
-                SimpleImputer(strategy="median"),
+                SimpleImputer(
+                    strategy="median"
+                ),
+            ),
+            (
+                "scaler",
+                StandardScaler(),
             ),
         ]
     )
 
-    # =========================
+    # =============================
     # CATEGORICAL PIPELINE
-    # =========================
+    # =============================
 
     categorical_pipeline = Pipeline(
         steps=[
@@ -63,67 +111,81 @@ def build_preprocessor(
             (
                 "encoder",
                 OneHotEncoder(
-                    handle_unknown="ignore",
+                    handle_unknown="ignore"
                 ),
             ),
         ]
     )
 
-    # =========================
-    # COMBINED PREPROCESSOR
-    # =========================
+    # =============================
+    # COLUMN TRANSFORMER
+    # =============================
 
-    preprocessor = ColumnTransformer(
-        transformers=[
-            (
-                "num",
-                numeric_pipeline,
-                numeric_features,
-            ),
-            (
-                "cat",
-                categorical_pipeline,
-                categorical_features,
-            ),
-        ]
+    preprocessor = (
+        ColumnTransformer(
+            transformers=[
+                (
+                    "num",
+                    numerical_pipeline,
+                    NUMERICAL_FEATURES,
+                ),
+                (
+                    "cat",
+                    categorical_pipeline,
+                    CATEGORICAL_FEATURES,
+                ),
+            ]
+        )
     )
 
     logger.success(
-        "Preprocessing pipeline built successfully"
+        "Preprocessing pipeline created"
     )
 
-    return (
-        preprocessor,
-        numeric_features + categorical_features,
-    )
+    return preprocessor
 
 
 def save_preprocessor(
-    preprocessor: ColumnTransformer,
-    path: str,
-) -> None:
+    preprocessor,
+    save_path: str,
+):
     """
-    Save fitted preprocessing pipeline.
+    Save fitted preprocessor.
     """
 
-    logger.info(f"Saving preprocessor to {path}")
+    logger.info(
+        f"Saving preprocessor to "
+        f"{save_path}"
+    )
 
-    joblib.dump(preprocessor, path)
+    joblib.dump(
+        preprocessor,
+        save_path,
+    )
 
-    logger.success("Preprocessor saved successfully")
+    logger.success(
+        "Preprocessor saved successfully"
+    )
 
 
 def load_preprocessor(
-    path: str,
-) -> ColumnTransformer:
+    load_path: str,
+):
     """
-    Load saved preprocessing pipeline.
+    Load fitted preprocessor.
     """
 
-    logger.info(f"Loading preprocessor from {path}")
+    logger.info(
+        f"Loading preprocessor from "
+        f"{load_path}"
+    )
 
-    preprocessor = joblib.load(path)
+    preprocessor = joblib.load(
+        load_path
+    )
 
-    logger.success("Preprocessor loaded successfully")
+    logger.success(
+        "Preprocessor loaded successfully"
+    )
 
     return preprocessor
