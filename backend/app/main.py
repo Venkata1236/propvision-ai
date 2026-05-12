@@ -7,7 +7,9 @@ from loguru import logger
 from app.core.config import settings
 from app.core.logger import setup_logger
 from app.routes.valuate import router as valuate_router
-
+from app.routes.valuate import (
+    router as valuate_router
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,6 +31,11 @@ app = FastAPI(
     version=settings.app_version,
     debug=settings.debug,
     lifespan=lifespan,
+)
+
+app.include_router(
+    valuate_router,
+    tags=["Valuation"],
 )
 
 # =========================
