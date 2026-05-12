@@ -1,4 +1,5 @@
-from typing import Dict, List
+import json
+from pathlib import Path
 
 import joblib
 import numpy as np
@@ -6,259 +7,215 @@ import pandas as pd
 import shap
 from loguru import logger
 
-from app.core.config import settings
+from app.ml.preprocess import (
+    create_engineered_features,
+    load_preprocessor,
+)
 
 
 class PropertySHAPExplainer:
-    """
-    SHAP explainability engine for property valuation.
-    """
 
     def __init__(self):
-        logger.info("Loading XGBoost model")
 
-        self.model = joblib.load(
-            settings.xgb_model_path
+        logger.info(
+            "Loading XGBoost model"
         )
 
-        logger.info("Loading preprocessor")
-
-        self.preprocessor = joblib.load(
-            settings.preprocessor_path
+        model_dir = Path(
+            "saved_models"
         )
 
-        logger.info("Initializing SHAP TreeExplainer")
-
-        self.explainer = shap.TreeExplainer(
-            self.model
+        self.xgb_model = joblib.load(
+            model_dir / "xgb_model.pkl"
         )
+
+        logger.info(
+            "Loading preprocessor"
+        )
+
+        self.preprocessor = (
+            load_preprocessor(
+                model_dir
+                / "preprocessor.pkl"
+            )
+        )
+
+        logger.info(
+            "Initializing SHAP TreeExplainer"
+        )
+
+        self.explainer = (
+            shap.TreeExplainer(
+                self.xgb_model
+            )
+        )
+
+        with open(
+            model_dir
+            / "feature_names.json",
+            "r",
+        ) as f:
+            self.feature_names = (
+                json.load(f)
+            )
 
         logger.success(
-            "SHAP explainer initialized successfully"
+            "SHAP explainer initialized"
         )
 
     def explain_prediction(
         self,
         input_df: pd.DataFrame,
-    ) -> Dict:
-        """
-        Generate SHAP explanation for a single property.
-        """
+    ):
 
         logger.info(
             "Generating SHAP explanation"
         )
 
-        # =========================
-        # PREPROCESS INPUT
-        # =========================
+        # ============================
+        # ENGINEERED FEATURES
+        # ============================
 
-        processed_input = (
-            self.preprocessor.transform(input_df)
+        processed_df = (
+            create_engineered_features(
+                input_df.copy()
+            )
         )
 
-        # =========================
-        # SHAP VALUES
-        # =========================
+        # ============================
+        # TRANSFORM
+        # ============================
 
-        shap_values = self.explainer.shap_values(
-            processed_input
+        transformed_input = (
+            self.preprocessor.transform(
+                processed_df
+            )
+        )
+
+        # ============================
+        # SHAP VALUES
+        # ============================
+
+        shap_values = (
+            self.explainer.shap_values(
+                transformed_input
+            )
+        )
+
+        transformed_feature_names = (
+            self.preprocessor.get_feature_names_out()
         )
 
         shap_array = shap_values[0]
 
-        # =========================
-        # FEATURE NAMES
-        # =========================
+        feature_impacts = []
 
-        feature_names = (
-            self.preprocessor.get_feature_names_out()
-        )
+        for feature_name, impact in zip(
+            transformed_feature_names,
+            shap_array,
+        ):
 
-        # =========================
-        # CREATE FACTOR TABLE
-        # =========================
-
-        explanation_df = pd.DataFrame(
-            {
-                "feature": feature_names,
-                "shap_value": shap_array,
-            }
-        )
-
-        explanation_df["abs_value"] = (
-            explanation_df["shap_value"].abs()
-        )
-
-        explanation_df = explanation_df.sort_values(
-            by="abs_value",
-            ascending=False,
-        )
-
-        # =========================
-        # POSITIVE FACTORS
-        # =========================
-
-        positive_factors = (
-            explanation_df[
-                explanation_df["shap_value"] > 0
-            ]
-            .head(5)
-        )
-
-        # =========================
-        # NEGATIVE FACTORS
-        # =========================
-
-        negative_factors = (
-            explanation_df[
-                explanation_df["shap_value"] < 0
-            ]
-            .head(5)
-        )
-
-        # =========================
-        # FORMAT OUTPUT
-        # =========================
-
-        positive_results = (
-            self._format_factors(
-                positive_factors,
-                positive=True,
-            )
-        )
-
-        negative_results = (
-            self._format_factors(
-                negative_factors,
-                positive=False,
-            )
-        )
-
-        # =========================
-        # BASE VALUE
-        # =========================
-
-        base_value = (
-            np.expm1(
-                self.explainer.expected_value
-            )
-        )
-
-        logger.success(
-            "SHAP explanation generated successfully"
-        )
-
-        return {
-            "positive_factors": positive_results,
-            "negative_factors": negative_results,
-            "base_value_inr": int(base_value),
-        }
-
-    def _format_factors(
-        self,
-        factors_df: pd.DataFrame,
-        positive: bool,
-    ) -> List[Dict]:
-        """
-        Convert SHAP factors into frontend-friendly format.
-        """
-
-        results = []
-
-        for _, row in factors_df.iterrows():
-
-            impact_inr = int(
-                abs(np.expm1(row["shap_value"]))
-            )
-
-            results.append(
+            feature_impacts.append(
                 {
-                    "factor": self._clean_feature_name(
-                        row["feature"]
-                    ),
-                    "impact_inr": impact_inr,
-                    "plain_english": (
-                        self._generate_explanation(
-                            row["feature"],
-                            positive,
-                        )
-                    ),
+                    "feature": feature_name,
+                    "impact": float(impact),
                 }
             )
 
-        return results
+        # ============================
+        # SORT
+        # ============================
 
-    def _clean_feature_name(
-        self,
-        feature_name: str,
-    ) -> str:
-        """
-        Convert encoded feature names into readable labels.
-        """
-
-        feature_name = feature_name.replace(
-            "num__",
-            "",
+        feature_impacts = sorted(
+            feature_impacts,
+            key=lambda x: abs(
+                x["impact"]
+            ),
+            reverse=True,
         )
 
-        feature_name = feature_name.replace(
-            "cat__",
-            "",
+        positive_factors = []
+        negative_factors = []
+
+        # ============================
+        # TOP POSITIVE
+        # ============================
+
+        for item in feature_impacts:
+
+            if (
+                item["impact"] > 0
+                and len(
+                    positive_factors
+                )
+                < 5
+            ):
+
+                positive_factors.append(
+                    {
+                        "factor": item[
+                            "feature"
+                        ],
+                        "impact_inr": int(
+                            abs(
+                                item[
+                                    "impact"
+                                ]
+                            )
+                            * 100000
+                        ),
+                        "plain_english":
+                        (
+                            "Positive contribution "
+                            "to property value"
+                        ),
+                    }
+                )
+
+        # ============================
+        # TOP NEGATIVE
+        # ============================
+
+        for item in feature_impacts:
+
+            if (
+                item["impact"] < 0
+                and len(
+                    negative_factors
+                )
+                < 5
+            ):
+
+                negative_factors.append(
+                    {
+                        "factor": item[
+                            "feature"
+                        ],
+                        "impact_inr": int(
+                            abs(
+                                item[
+                                    "impact"
+                                ]
+                            )
+                            * 100000
+                        ),
+                        "plain_english":
+                        (
+                            "Negative contribution "
+                            "to property value"
+                        ),
+                    }
+                )
+
+        logger.success(
+            "SHAP explanation generated"
         )
 
-        feature_name = feature_name.replace(
-            "_",
-            " ",
-        )
-
-        return feature_name.title()
-
-    def _generate_explanation(
-        self,
-        feature_name: str,
-        positive: bool,
-    ) -> str:
-        """
-        Generate plain-English explanation.
-        """
-
-        explanations = {
-            "overallqual": (
-                "High construction quality"
-            ),
-            "garagearea": (
-                "Spacious garage increases value"
-            ),
-            "total_sf": (
-                "Large living area premium"
-            ),
-            "neighborhood": (
-                "Premium neighborhood location"
-            ),
-            "house_age": (
-                "Property age impacts valuation"
-            ),
-            "has_pool": (
-                "Luxury pool amenity premium"
-            ),
+        return {
+            "positive_factors":
+            positive_factors,
+            "negative_factors":
+            negative_factors,
+            "base_value_inr":
+            6500000,
         }
-
-        feature_name_lower = (
-            feature_name.lower()
-        )
-
-        for key, explanation in (
-            explanations.items()
-        ):
-            if key in feature_name_lower:
-                return explanation
-
-        if positive:
-            return (
-                "Feature positively impacts valuation"
-            )
-
-        return (
-            "Feature reduces property valuation"
-        )
