@@ -68,9 +68,15 @@ function PropertyForm() {
     }
   };
 
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <div className="w-full max-w-5xl mx-auto bg-zinc-900 border border-zinc-800 rounded-3xl p-10 shadow-2xl">
+
       <div className="mb-10">
+
         <h1 className="text-5xl font-bold text-white mb-4">
           PropVision AI
         </h1>
@@ -80,15 +86,18 @@ function PropertyForm() {
           valuation and market
           intelligence
         </p>
+
       </div>
 
       <form
         onSubmit={handleSubmit}
         className="space-y-8"
       >
+
         {/* ROW 1 */}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
           <div>
             <label className="block text-zinc-300 mb-2">
               Neighborhood
@@ -142,11 +151,13 @@ function PropertyForm() {
               className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white"
             />
           </div>
+
         </div>
 
         {/* ROW 2 */}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
           <div>
             <label className="block text-zinc-300 mb-2">
               Bedrooms
@@ -203,23 +214,31 @@ function PropertyForm() {
             />
 
             <div className="flex justify-between text-sm text-zinc-500 mt-2">
-              <span>Poor</span>
+
+              <span>
+                Poor
+              </span>
+
               <span>
                 {
                   formData.overall_quality
                 }
                 /10
               </span>
+
               <span>
                 Excellent
               </span>
+
             </div>
           </div>
+
         </div>
 
         {/* ROW 3 */}
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+
           <div>
             <label className="block text-zinc-300 mb-2">
               House Age
@@ -239,6 +258,7 @@ function PropertyForm() {
           </div>
 
           <label className="flex items-center gap-3 text-zinc-300">
+
             <input
               type="checkbox"
               name="is_remodeled"
@@ -251,9 +271,11 @@ function PropertyForm() {
             />
 
             Remodeled
+
           </label>
 
           <label className="flex items-center gap-3 text-zinc-300">
+
             <input
               type="checkbox"
               name="has_garage"
@@ -266,9 +288,11 @@ function PropertyForm() {
             />
 
             Garage
+
           </label>
 
           <label className="flex items-center gap-3 text-zinc-300">
+
             <input
               type="checkbox"
               name="has_pool"
@@ -281,7 +305,9 @@ function PropertyForm() {
             />
 
             Pool
+
           </label>
+
         </div>
 
         <button
@@ -293,6 +319,7 @@ function PropertyForm() {
             ? "Analyzing Property..."
             : "Get AI Valuation"}
         </button>
+
       </form>
     </div>
   );
