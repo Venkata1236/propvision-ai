@@ -1,4 +1,5 @@
 import { useLocation } from "react-router-dom";
+
 import VerdictBadge from "../components/VerdictBadge";
 import ConfidenceBar from "../components/ConfidenceBar";
 
@@ -65,45 +66,28 @@ function ResultsPage() {
           </div>
         </div>
 
-        {/* CONFIDENCE RANGE */}
+        {/* CONFIDENCE ANALYSIS */}
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-10">
 
-            <h2 className="text-3xl font-bold mb-8">
-                Confidence Analysis
-            </h2>
+          <h2 className="text-3xl font-bold mb-8">
+            Confidence Analysis
+          </h2>
 
-            <ConfidenceBar
-                low={
-                data.confidence_range
-                    ?.low_inr
-                }
-                predicted={
-                data.predicted_price_inr
-                }
-                high={
-                data.confidence_range
-                    ?.high_inr
-                }
-            />
+          <ConfidenceBar
+            low={
+              data.confidence_range
+                ?.low_inr
+            }
+            predicted={
+              data.predicted_price_inr
+            }
+            high={
+              data.confidence_range
+                ?.high_inr
+            }
+          />
 
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-zinc-400">
-                Margin
-              </span>
-
-              <span className="font-semibold">
-                ± ₹
-                {Number(
-                  data.confidence_range
-                    ?.margin_inr
-                ).toLocaleString()}
-              </span>
-            </div>
-
-          </div>
         </div>
 
         {/* SHAP FACTORS */}
@@ -174,7 +158,7 @@ function ResultsPage() {
                     </p>
 
                     <p className="text-red-400 font-bold">
-                      ₹
+                      - ₹
                       {Number(
                         factor.impact_inr
                       ).toLocaleString()}
@@ -191,6 +175,7 @@ function ResultsPage() {
         {/* COMPARABLE SALES */}
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-10">
+
           <h2 className="text-3xl font-bold mb-8">
             Comparable Sales
           </h2>
@@ -258,12 +243,54 @@ function ResultsPage() {
           </div>
         </div>
 
-        
+        {/* INVESTMENT RECOMMENDATION */}
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-10">
+
+          <h2 className="text-3xl font-bold mb-8">
+            Investment Recommendation
+          </h2>
+
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+
+            <div>
+
+              <p className="text-zinc-400 mb-4">
+                AI Verdict
+              </p>
+
+              <VerdictBadge
+                verdict={
+                  data
+                    .investment_recommendation
+                    ?.verdict || "BUY"
+                }
+              />
+
+            </div>
+
+            <div className="max-w-3xl">
+
+              <p className="text-zinc-300 leading-relaxed text-lg">
+                {
+                  data
+                    .investment_recommendation
+                    ?.reasoning
+                }
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
         {/* MARKET INSIGHTS */}
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
+
           <h2 className="text-3xl font-bold mb-8">
-            AI Investment Insights
+            AI Market Insights
           </h2>
 
           <div className="space-y-6">
@@ -282,6 +309,7 @@ function ResultsPage() {
             )}
 
           </div>
+
         </div>
 
       </div>
