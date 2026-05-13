@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 
 import VerdictBadge from "../components/VerdictBadge";
 import ConfidenceBar from "../components/ConfidenceBar";
-import SHAPWaterfallChart from "../components/SHAPWaterfallChart";
+import SHAPExplanation from "../components/SHAPExplanation";
 
 function ResultsPage() {
   const location = useLocation();
@@ -172,6 +172,19 @@ function ResultsPage() {
           </div>
 
         </div>
+
+        {/* SHAP VISUALIZATION */}
+
+        <SHAPExplanation
+          positiveFactors={
+            data.shap_explanation
+              ?.positive_factors || []
+          }
+          negativeFactors={
+            data.shap_explanation
+              ?.negative_factors || []
+          }
+        />
 
         {/* COMPARABLE SALES */}
 
