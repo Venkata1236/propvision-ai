@@ -1,4 +1,6 @@
 import { useLocation } from "react-router-dom";
+import VerdictBadge from "../components/VerdictBadge";
+import ConfidenceBar from "../components/ConfidenceBar";
 
 function ResultsPage() {
   const location = useLocation();
@@ -66,38 +68,25 @@ function ResultsPage() {
         {/* CONFIDENCE RANGE */}
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-10">
-          <h2 className="text-3xl font-bold mb-8">
-            Confidence Range
-          </h2>
 
-          <div className="space-y-4">
+            <h2 className="text-3xl font-bold mb-8">
+                Confidence Analysis
+            </h2>
 
-            <div className="flex justify-between">
-              <span className="text-zinc-400">
-                Lower Estimate
-              </span>
-
-              <span className="font-semibold">
-                ₹
-                {Number(
-                  data.confidence_range
+            <ConfidenceBar
+                low={
+                data.confidence_range
                     ?.low_inr
-                ).toLocaleString()}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-zinc-400">
-                Upper Estimate
-              </span>
-
-              <span className="font-semibold">
-                ₹
-                {Number(
-                  data.confidence_range
+                }
+                predicted={
+                data.predicted_price_inr
+                }
+                high={
+                data.confidence_range
                     ?.high_inr
-                ).toLocaleString()}
-              </span>
+                }
+            />
+
             </div>
 
             <div className="flex justify-between">
@@ -269,6 +258,7 @@ function ResultsPage() {
           </div>
         </div>
 
+        
         {/* MARKET INSIGHTS */}
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
