@@ -20,11 +20,13 @@ function ResultsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white px-6 py-16">
+
       <div className="max-w-7xl mx-auto">
 
         {/* HEADER */}
 
         <div className="mb-12">
+
           <h1 className="text-5xl font-bold mb-4">
             AI Valuation Results
           </h1>
@@ -32,40 +34,39 @@ function ResultsPage() {
           <p className="text-zinc-400 text-lg">
             AI-powered property intelligence report
           </p>
+
         </div>
 
-        {/* HERO CARD */}
+        {/* METRIC CARDS */}
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-10 mb-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
 
-            <div>
-              <p className="text-zinc-400 mb-2">
-                Predicted Property Value
-              </p>
+          <MetricCard
+            title="Predicted Value"
+            value={`₹${Number(
+              data.predicted_price_inr
+            ).toLocaleString()}`}
+            subtitle="AI estimated property valuation"
+          />
 
-              <h2 className="text-6xl font-bold text-white">
-                ₹
-                {Number(
-                  data.predicted_price_inr
-                ).toLocaleString()}
-              </h2>
-            </div>
+          <MetricCard
+            title="Confidence Level"
+            value={
+              data.confidence_range
+                ?.confidence_level
+            }
+            subtitle="Prediction reliability score"
+          />
 
-            <div className="bg-zinc-800 rounded-2xl px-8 py-6">
-              <p className="text-zinc-400 mb-2">
-                Confidence Level
-              </p>
+          <MetricCard
+            title="Comparable Properties"
+            value={
+              data.comparable_sales
+                ?.length || 0
+            }
+            subtitle="Retrieved from FAISS vector database"
+          />
 
-              <h3 className="text-3xl font-bold">
-                {
-                  data.confidence_range
-                    ?.confidence_level
-                }
-              </h3>
-            </div>
-
-          </div>
         </div>
 
         {/* CONFIDENCE ANALYSIS */}
@@ -99,6 +100,7 @@ function ResultsPage() {
           {/* POSITIVE */}
 
           <div className="bg-zinc-900 border border-green-900 rounded-3xl p-8">
+
             <h2 className="text-3xl font-bold mb-8 text-green-400">
               Positive Factors
             </h2>
@@ -111,6 +113,7 @@ function ResultsPage() {
                     key={index}
                     className="bg-zinc-800 rounded-2xl p-5"
                   >
+
                     <h3 className="text-xl font-semibold mb-2">
                       {factor.factor}
                     </h3>
@@ -127,16 +130,19 @@ function ResultsPage() {
                         factor.impact_inr
                       ).toLocaleString()}
                     </p>
+
                   </div>
                 )
               )}
 
             </div>
+
           </div>
 
           {/* NEGATIVE */}
 
           <div className="bg-zinc-900 border border-red-900 rounded-3xl p-8">
+
             <h2 className="text-3xl font-bold mb-8 text-red-400">
               Negative Factors
             </h2>
@@ -149,6 +155,7 @@ function ResultsPage() {
                     key={index}
                     className="bg-zinc-800 rounded-2xl p-5"
                   >
+
                     <h3 className="text-xl font-semibold mb-2">
                       {factor.factor}
                     </h3>
@@ -165,11 +172,13 @@ function ResultsPage() {
                         factor.impact_inr
                       ).toLocaleString()}
                     </p>
+
                   </div>
                 )
               )}
 
             </div>
+
           </div>
 
         </div>
@@ -203,6 +212,7 @@ function ResultsPage() {
                   key={index}
                   className="bg-zinc-800 rounded-2xl p-6"
                 >
+
                   <h3 className="text-xl font-semibold mb-4">
                     {
                       property.description
@@ -251,11 +261,13 @@ function ResultsPage() {
                     </div>
 
                   </div>
+
                 </div>
               )
             )}
 
           </div>
+
         </div>
 
         {/* INVESTMENT RECOMMENDATION */}
@@ -316,9 +328,11 @@ function ResultsPage() {
                   key={index}
                   className="bg-zinc-800 rounded-2xl p-6"
                 >
+
                   <p className="text-zinc-200 leading-relaxed">
                     {insight}
                   </p>
+
                 </div>
               )
             )}
@@ -328,6 +342,7 @@ function ResultsPage() {
         </div>
 
       </div>
+
     </div>
   );
 }
