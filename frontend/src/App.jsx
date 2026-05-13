@@ -1,7 +1,7 @@
 function App() {
   return (
-    <div>
-      <h1>PropVision AI</h1>
+    <div className="min-h-screen bg-black text-white flex items-center justify-center text-4xl">
+      PropVision AI
     </div>
   );
 }
