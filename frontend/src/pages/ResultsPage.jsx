@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import VerdictBadge from "../components/VerdictBadge";
 import ConfidenceBar from "../components/ConfidenceBar";
 import SHAPExplanation from "../components/SHAPExplanation";
+import MetricCard from "../components/MetricCard";
 
 function ResultsPage() {
   const location = useLocation();
