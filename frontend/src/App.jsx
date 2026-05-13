@@ -1,8 +1,33 @@
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+} from "react-router-dom";
+
+import ValuatePage from "./pages/ValuatePage";
+import ResultsPage from "./pages/ResultsPage";
+import HistoryPage from "./pages/HistoryPage";
+
 function App() {
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center text-4xl">
-      PropVision AI
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={<ValuatePage />}
+        />
+
+        <Route
+          path="/results"
+          element={<ResultsPage />}
+        />
+
+        <Route
+          path="/history"
+          element={<HistoryPage />}
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
