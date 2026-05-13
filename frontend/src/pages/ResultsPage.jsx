@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 
 import VerdictBadge from "../components/VerdictBadge";
 import ConfidenceBar from "../components/ConfidenceBar";
+import SHAPWaterfallChart from "../components/SHAPWaterfallChart";
 
 function ResultsPage() {
   const location = useLocation();
