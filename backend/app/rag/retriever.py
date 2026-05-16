@@ -7,6 +7,7 @@ import pandas as pd
 from langchain_openai import OpenAIEmbeddings
 from loguru import logger
 
+
 from app.core.config import settings
 
 
