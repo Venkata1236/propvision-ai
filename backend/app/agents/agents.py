@@ -8,6 +8,7 @@ logger.info(
     "Initializing CrewAI language model"
 )
 
+
 llm = LLM(
     model=f"openai/{settings.openai_model}",
     temperature=0.2,
