@@ -59,6 +59,7 @@ function ConfidenceBar({
       </div>
 
     </div>
+    
   );
 }
 
