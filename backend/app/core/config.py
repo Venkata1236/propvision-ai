@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     # OPENAI MODEL CONFIG
     # =========================
     openai_model: str = Field(default="gpt-3.5-turbo")
+    
     openai_embedding_model: str = Field(
         default="text-embedding-ada-002"
     )
