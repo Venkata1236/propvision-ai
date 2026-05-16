@@ -7,6 +7,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
+
 COPY saved_models ./saved_models
 COPY faiss_index ./faiss_index
 
