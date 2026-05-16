@@ -6,6 +6,7 @@ function HistoryPage() {
       </h1>
     </div>
   );
+  
 }
 
 export default HistoryPage;
