@@ -34,6 +34,7 @@ class PropertySHAPExplainer:
         )
 
         self.preprocessor = (
+            
             load_preprocessor(
                 model_dir
                 / "preprocessor.pkl"
