@@ -66,3 +66,5 @@ class ConfidenceIntervalCalculator:
             self.mape * 100,
             2,
         )
+        
+        
