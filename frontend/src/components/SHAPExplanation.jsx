@@ -26,6 +26,7 @@ function SHAPWaterfallChart({
       })
     );
 
+    
   const negativeData =
     negativeFactors.map(
       (factor) => ({
