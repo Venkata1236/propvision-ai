@@ -13,6 +13,7 @@ const API = axios.create({
 });
 
 export const valuateProperty =
+  
   async (propertyData) => {
 
     const response =
