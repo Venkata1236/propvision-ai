@@ -250,6 +250,7 @@ function PropertyForm() {
               value={
                 formData.house_age_years
               }
+              
               onChange={
                 handleChange
               }
