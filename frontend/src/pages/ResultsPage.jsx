@@ -278,6 +278,7 @@ function ResultsPage() {
             Investment Recommendation
           </h2>
 
+
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
 
             <div>
