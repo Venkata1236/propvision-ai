@@ -5,6 +5,7 @@ import {
 } from "react-router-dom";
 
 import ValuatePage from "./pages/ValuatePage";
+
 import ResultsPage from "./pages/ResultsPage";
 import HistoryPage from "./pages/HistoryPage";
 
